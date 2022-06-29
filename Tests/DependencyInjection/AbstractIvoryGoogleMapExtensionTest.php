@@ -76,6 +76,7 @@ abstract class AbstractIvoryGoogleMapExtensionTest extends TestCase
     {
         $this->container = new ContainerBuilder();
         $this->container->setParameter('kernel.root_dir', __DIR__.'/..');
+        $this->container->setParameter('kernel.project_dir', realpath(__DIR__.'/../..'));
         $this->container->setParameter('kernel.debug', $this->debug = false);
         $this->container->setParameter('locale', $this->locale = 'en');
         $this->container->set('httplug.client', $this->client = $this->createClientMock());
@@ -274,6 +275,7 @@ abstract class AbstractIvoryGoogleMapExtensionTest extends TestCase
         $this->assertSame($this->serializer, $direction->getSerializer());
         $this->assertSame(DirectionService::FORMAT_JSON, $direction->getFormat());
         $this->assertFalse($direction->hasBusinessAccount());
+        self::assertTrue($this->container->has('ivory.google_map.serializer.loader'));
     }
 
     public function testDirectionFormat()

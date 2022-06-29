@@ -114,10 +114,28 @@ class IvoryGoogleMapExtension extends ConfigurableExtension
             'time_zone'          => true,
         ];
 
-        foreach ($services as $service => $http) {
-            if (isset($config[$service])) {
-                $this->loadServiceConfig($service, $config[$service], $container, $loader, $http);
+        $serializerLoaded = false;
+        $loadSerializer = function() use ($container, $loader) {
+            $loader->load('service/serializer.xml');
+
+            if ($container->hasParameter('kernel.project_dir')) {
+                $container
+                    ->getDefinition('ivory.google_map.serializer.loader')
+                    ->replaceArgument(0, '%kernel.project_dir%/vendor/ivory/google-map/src/Service/Serializer');
             }
+        };
+
+        foreach ($services as $service => $http) {
+            if (!isset($config[$service])) {
+                continue;
+            }
+
+            if ($http && !$serializerLoaded) {
+                $loadSerializer();
+                $serializerLoaded = true;
+            }
+
+            $this->loadServiceConfig($service, $config[$service], $container, $loader, $http);
         }
     }
 
@@ -139,8 +157,6 @@ class IvoryGoogleMapExtension extends ConfigurableExtension
         $definition = $container->getDefinition($serviceName = 'ivory.google_map.'.$service);
 
         if ($http) {
-            $loader->load('service/serializer.xml');
-
             $definition
                 ->addArgument(new Reference($config['client']))
                 ->addArgument(new Reference($config['message_factory']))
